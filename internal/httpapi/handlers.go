@@ -19,7 +19,7 @@ type createResponse struct {
 	ShortURL string `json:"short_url"`
 }
 
-type linkResponse struct {
+type statsResponse struct {
 	Code      string    `json:"code"`
 	URL       string    `json:"url"`
 	Hits      int64     `json:"hits"`
@@ -88,4 +88,24 @@ func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, link.URL, http.StatusFound)
+}
+
+func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
+	code := r.PathValue("code")
+	link, err := s.linkStore.Get(r.Context(), code)
+
+	if errors.Is(err, links.ErrNotFound) {
+		writeJSONError(w, http.StatusNotFound, "code not found")
+		return
+	}
+
+	if err != nil {
+		slog.Error("stats failed", "code", code, "err", err)
+		writeJSONError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(statsResponse{Code: link.Code, URL: link.URL, Hits: link.Hits, CreatedAt: link.CreatedAt})
 }
