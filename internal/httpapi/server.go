@@ -18,6 +18,6 @@ func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.healthz)
 	mux.HandleFunc("POST /shorten", s.shorten)
-	// ... more routes added later ...
+	mux.HandleFunc("GET /{code}", s.redirect)
 	return mux
 }

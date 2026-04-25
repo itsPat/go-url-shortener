@@ -61,7 +61,7 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		slog.Error("/shorten failed", "body", body, "err", err)
+		slog.Error("shorten failed", "body", body, "err", err)
 		writeJSONError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
@@ -71,4 +71,21 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(createResponse{Code: link.Code, ShortURL: shortURL})
+}
+
+func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
+	code := r.PathValue("code")
+	link, err := s.linkStore.GetAndIncrement(r.Context(), code)
+
+	if errors.Is(err, links.ErrNotFound) {
+		writeJSONError(w, http.StatusNotFound, "code not found")
+		return
+	}
+	if err != nil {
+		slog.Error("redirect failed", "code", code, "err", err)
+		writeJSONError(w, http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	http.Redirect(w, r, link.URL, http.StatusFound)
 }
