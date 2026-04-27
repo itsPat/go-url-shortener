@@ -10,9 +10,9 @@ var ErrNotFound = errors.New("link not found")
 var ErrCodeTaken = errors.New("code already taken")
 
 type Link struct {
-	Code      string
-	URL       string
-	Hits      int64
+	Code      string `gorm:"primaryKey;size:16"`
+	URL       string `gorm:"not null"`
+	Hits      int64  `gorm:"not null;default:0"`
 	CreatedAt time.Time
 }
 
