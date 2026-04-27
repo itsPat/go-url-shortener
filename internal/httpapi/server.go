@@ -20,5 +20,5 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /shorten", s.shorten)
 	mux.HandleFunc("GET /{code}", s.redirect)
 	mux.HandleFunc("GET /stats/{code}", s.stats)
-	return mux
+	return loggingMiddleware(mux)
 }
